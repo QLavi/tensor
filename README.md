@@ -3,7 +3,7 @@
 A reverse mode automatic differentiation library.
 
 After being tired of writing and debugging backpropogration algorithm for neural nets.
-I implemented this so algorithms for computing gradients and, algorithms for neural network is kept separate.
+I implemented this so algorithms for computing gradients and algorithms for neural network are kept separate.
 
 ## Features:
 

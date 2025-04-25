@@ -24,25 +24,25 @@ tm_bs = [t.Tensor(np_b, req_grad=True) for np_b in np_bs]
 
 def tm_F(M):
     M = M.T
-    M = tm_sigmoid(tm_Ws[0] @ M + tm_bs[0])
-    M = tm_sigmoid(tm_Ws[1] @ M + tm_bs[1])
+    M = tm_relu(tm_Ws[0] @ M + tm_bs[0])
+    M = tm_relu(tm_Ws[1] @ M + tm_bs[1])
     M = tm_Ws[2] @ M + tm_bs[2]
     M = M.T
     return M
 
 def np_F(M, W0, b0, W1, b1, W2, b2):
     M = M.T
-    M = np_sigmoid(W0 @ M + b0)
-    M = np_sigmoid(W1 @ M + b1)
+    M = np_relu(W0 @ M + b0)
+    M = np_relu(W1 @ M + b1)
     M = W2 @ M + b2
     M = M.T
     return M
 
 def tm_sigmoid(x): return 1 / (1 + tm.exp(-x))
-def tm_relu(x): return tm.maximum(t.zeros_like(x), x)
+def tm_relu(x): return tm.maximum(0, x)
 
 def np_sigmoid(x): return 1 / (1 + np.exp(-x))
-def np_relu(x): return np.maximum(np.zeros_like(x), x)
+def np_relu(x): return np.maximum(0, x)
 
 def tm_MSE(a, b):
     d = a - b

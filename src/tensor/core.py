@@ -64,16 +64,20 @@ def forward_all(F: Callable, B: Callable, *args, **kwargs) -> 'Tensor':
     Returns:
         output tensor of F
     """
+    args_proper = tuple(
+        x if isinstance(x, Tensor) else Tensor(x)
+        for x in args
+    )
     ctx = _BContext()
-    r = F(ctx, *args, **kwargs)
-    ctx.input_req_grads = tuple(x.req_grad for x in args)
+    r = F(ctx, *args_proper, **kwargs)
+    ctx.input_req_grads = tuple(x.req_grad for x in args_proper)
     r.req_grad = any(ctx.input_req_grads)
     if r.req_grad:
-        _tape.append(_TapeItem(B, ctx, args, r))
+        _tape.append(_TapeItem(B, ctx, args_proper, r))
     return r
 
 
-@dataclass(eq=False)
+@dataclass(init=False, eq=False)
 class Tensor:
     """Stores the data, gradient ndarrays, and tracks the operation performed on
         the data.
@@ -107,20 +111,32 @@ class Tensor:
         grad: gradient of the operation with respect to this instance.
         req_grad: flag used to check whether the tensor is variable or a constant.
     """
-
-    data: np.ndarray
-    grad: optional_array = field(default=None, init=False, repr=False)
-    req_grad: bool = field(default=False)
-
-    def __post_init__(self):
+    def __init__(self,
+        data: np.ndarray | int | float,
+        req_grad: bool = False):
         """
-        Using 1D ndarrays is problematic because how it broadcast in different context
-        so we reshape it to 2d tensor. there is no problem with 0D ndarray.
+        Args:
+            data: data that tensor will store
+            req_grad: whether this tensor requires gradient of functions it get used
+                in.
+        Note:
+            Using 1d ndarray is problematic because of how it broadcasts, an example
+            for this is,
+            M = np.array([[1, 2], [3, 4]])
+            x = np.array([1, 2])
+            r = M @ x # here x will broadcast to shape (2, 1)
+            r = x @ M # here x will broadcast to shape (1, 2)
+            so self.data's ndim should be atleast 2d.
         """
+
+        if isinstance(data, np.ndarray) and data.ndim == 1:
+            self.data = np.atleast_2d(data)
+        else:
+            self.data = np.array(data)
+
         self.data = self.data.astype(np.float64)
-
-        if self.data.ndim == 1:
-            self.data = np.atleast_2d(self.data)
+        self.req_grad = req_grad
+        self.grad = None
 
     def __getitem__(self, index) -> 'Tensor':
         """Index in the tensor's data attribute.

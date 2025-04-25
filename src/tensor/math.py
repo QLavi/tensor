@@ -84,10 +84,11 @@ def _minimum_B(ctx: _BContext, g: np.ndarray) -> tuple[optional_array, ...]:
 def _max(x: Tensor) -> Tensor:
     return Tensor(np.max(x.data))
 
-exp = partial(forward_all, _exp_F, _exp_B)
-log = partial(forward_all, _log_F, _log_B)
+exp  = partial(forward_all, _exp_F, _exp_B)
+log  = partial(forward_all, _log_F, _log_B)
+sum  = partial(forward_all, _sum_F, _sum_B)
+abs  = partial(forward_all, _abs_F, _abs_B)
 log2 = partial(forward_all, _log2_F, _log2_B)
-sum = partial(forward_all, _sum_F, _sum_B)
 maximum = partial(forward_all, _maximum_F, _maximum_B)
 minimum = partial(forward_all, _minimum_F, _minimum_B)
 max = _max
